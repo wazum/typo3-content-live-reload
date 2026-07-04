@@ -1,0 +1,21 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3Fluid/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:if condition="{collectorAvailable}">
+    <f:then>
+        <p>{count} cache tags collected for this page:</p>
+        <div class="typo3-adminPanel-table-overflow">
+            <table class="typo3-adminPanel-table">
+                <tbody>
+                    <f:for each="{tags}" as="tag">
+                        <tr>
+                            <td><code>{tag}</code></td>
+                        </tr>
+                    </f:for>
+                </tbody>
+            </table>
+        </div>
+    </f:then>
+    <f:else>
+        <p>No cache data collector available on this request.</p>
+    </f:else>
+</f:if>
+</html>

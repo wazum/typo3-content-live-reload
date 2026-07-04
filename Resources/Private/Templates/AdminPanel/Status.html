@@ -1,0 +1,28 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3Fluid/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<div class="typo3-adminPanel-table-overflow">
+    <table class="typo3-adminPanel-table">
+        <tbody>
+            <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">Active in this context</th>
+                <td>{f:if(condition: contextAllowed, then: 'yes', else: 'no')} ({context}; configured: {activeContexts})</td>
+            </tr>
+            <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">Reload mode</th>
+                <td>{mode}{f:if(condition: modeOverridden, then: ' (overridden via admin panel)')}</td>
+            </tr>
+            <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">Browser-facing dev server</th>
+                <td>{f:if(condition: resolvedUrl, then: '{resolvedUrl}', else: 'not resolved')} — source: {resolutionSource}</td>
+            </tr>
+            <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">Broadcast target (PHP → Vite)</th>
+                <td>{internalUrl}</td>
+            </tr>
+            <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">frontend.cache.autoTagging</th>
+                <td>{f:if(condition: autoTagging, then: 'enabled', else: 'DISABLED — only pageId matching works; enable it in settings.php')}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</html>
