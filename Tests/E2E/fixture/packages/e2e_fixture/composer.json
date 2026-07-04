@@ -1,0 +1,8 @@
+{
+    "name": "wazum/e2e-fixture",
+    "type": "typo3-cms-extension",
+    "license": "GPL-2.0-or-later",
+    "require": { "typo3/cms-core": "*" },
+    "autoload": { "psr-4": { "Wazum\\E2eFixture\\": "Classes" } },
+    "extra": { "typo3/cms": { "extension-key": "e2e_fixture" } }
+}

@@ -1,0 +1,9 @@
+{
+    "name": "content-live-reload-e2e-app",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "vite": "^7.0",
+        "vite-plugin-typo3": "^2.0"
+    }
+}

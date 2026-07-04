@@ -1,0 +1,4 @@
+name: wazum/e2e-fixture
+label: E2E fixture
+dependencies:
+  - typo3/fluid-styled-content

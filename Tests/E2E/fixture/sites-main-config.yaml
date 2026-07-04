@@ -1,0 +1,13 @@
+base: 'http://127.0.0.1:8080/'
+rootPageId: 1
+websiteTitle: E2E
+dependencies:
+  - wazum/e2e-fixture
+languages:
+  - title: English
+    enabled: true
+    languageId: 0
+    base: /
+    locale: en_US.UTF-8
+    navigationTitle: English
+    flag: us

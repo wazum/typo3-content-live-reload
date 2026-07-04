@@ -1,0 +1,18 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Wazum\E2eFixture\:
+    resource: '../Classes/*'
+
+  Wazum\E2eFixture\Command\SeedCommand:
+    tags:
+      - name: console.command
+        command: 'e2e:seed'
+
+  Wazum\E2eFixture\Command\UpdateContentCommand:
+    tags:
+      - name: console.command
+        command: 'e2e:update-content'

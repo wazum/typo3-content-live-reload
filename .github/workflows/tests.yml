@@ -1,0 +1,78 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        typo3: ['^13.4', '^14.3']
+        exclude:
+          - php: '8.2'
+            typo3: '^14.3'
+    continue-on-error: ${{ matrix.typo3 == '^14.3' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sqlite3, pdo_sqlite, intl
+      - run: composer require "typo3/cms-core:${{ matrix.typo3 }}" "typo3/cms-frontend:${{ matrix.typo3 }}" --no-interaction --no-progress --dev --with-all-dependencies
+      - run: composer run test:unit
+      - run: composer run test:functional
+
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: composer install --no-interaction --no-progress
+      - run: composer run cs:check
+      - run: composer run phpstan
+
+  vite-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+        working-directory: Resources/Private/Vite
+      - run: npm test
+        working-directory: Resources/Private/Vite
+      - run: npm run build
+        working-directory: Resources/Private/Vite
+
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        typo3: ['^13.4', '^14.3']
+    continue-on-error: ${{ matrix.typo3 == '^14.3' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: sqlite3, pdo_sqlite, intl
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+        working-directory: Tests/E2E
+      - run: npx playwright install --with-deps chromium
+        working-directory: Tests/E2E
+      - run: TYPO3_CORE_CONSTRAINT='${{ matrix.typo3 }}' bash Tests/E2E/run.sh
+      - run: npm test
+        working-directory: Tests/E2E
+      - if: failure()
+        run: tail -50 Tests/E2E/.php-server.log Tests/E2E/.vite.log || true

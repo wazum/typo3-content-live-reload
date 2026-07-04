@@ -1,0 +1,44 @@
+{
+    "name": "wazum/content-live-reload-e2e",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../..",
+            "options": {
+                "symlink": false
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/e2e_fixture",
+            "options": {
+                "symlink": false
+            }
+        }
+    ],
+    "require": {
+        "praetorius/vite-asset-collector": "*",
+        "typo3/cms-backend": "*",
+        "typo3/cms-core": "*",
+        "typo3/cms-fluid-styled-content": "*",
+        "typo3/cms-frontend": "*",
+        "typo3/cms-install": "*",
+        "wazum/typo3-content-live-reload": "@dev",
+        "wazum/e2e-fixture": "@dev"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "web-dir": "public"
+        }
+    }
+}
