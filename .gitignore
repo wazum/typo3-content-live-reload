@@ -12,3 +12,5 @@
 /Tests/E2E/*.pid
 /Tests/E2E/*.log
 /Tests/E2E/test-results/
+/Tests/E2E/demo/video/
+/Tests/E2E/demo/.trigger

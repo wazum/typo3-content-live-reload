@@ -49,7 +49,7 @@ vendor/bin/typo3 e2e:seed > "${E2E_DIR}/.seed.json"
 vendor/bin/typo3 cache:flush
 
 unset VITE_SERVER_URI VITE_PRIMARY_PORT
-TYPO3_CONTEXT=Development VITE_PRIMARY_PORT=5273 php -S 127.0.0.1:8080 router.php >"${E2E_DIR}/.php-server.log" 2>&1 &
+TYPO3_CONTEXT=Development VITE_PRIMARY_PORT=5273 php -S 127.0.0.1:8080 -t public router.php >"${E2E_DIR}/.php-server.log" 2>&1 &
 echo $! > "${E2E_DIR}/.php-server.pid"
 npx vite --config vite.config.ts >"${E2E_DIR}/.vite.log" 2>&1 &
 echo $! > "${E2E_DIR}/.vite.pid"

@@ -1,4 +1,4 @@
-<h1 align="center">Content Live Reload</h1>
+<h1 align="center">Content Live Reload (Development)</h1>
 <p align="center"><em>Save a record in the backend. The right browser tabs reload. Nothing else moves.</em></p>
 <br>
 
@@ -13,6 +13,8 @@ Vite already reloads the browser when a *file* changes. This extension adds the 
 No polling, no file watchers, no disabled caches. TYPO3's own cache tags decide which tabs are affected: each page knows the tags it rendered, each save knows the tags it flushed, and each tab compares the two.
 
 One `composer require` plus one line in `vite.config.ts` — no TYPO3 configuration needed when you use [vite-asset-collector](https://packagist.org/packages/praetorius/vite-asset-collector).
+
+![A record is saved in the TYPO3 backend, only the browser tab showing that record reloads, a second tab stays untouched](Documentation/demo.gif)
 
 ## Installation
 

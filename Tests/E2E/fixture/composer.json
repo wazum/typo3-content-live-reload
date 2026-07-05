@@ -20,13 +20,14 @@
     ],
     "require": {
         "praetorius/vite-asset-collector": "*",
+        "typo3/cms-adminpanel": "*",
         "typo3/cms-backend": "*",
         "typo3/cms-core": "*",
         "typo3/cms-fluid-styled-content": "*",
         "typo3/cms-frontend": "*",
         "typo3/cms-install": "*",
-        "wazum/typo3-content-live-reload": "@dev",
-        "wazum/e2e-fixture": "@dev"
+        "wazum/e2e-fixture": "@dev",
+        "wazum/typo3-content-live-reload": "@dev"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
