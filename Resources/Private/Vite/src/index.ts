@@ -22,6 +22,7 @@ try {
     }
 } catch {}
 if (configuration && import.meta.hot) {
+    let missedWhilePaused = false
     const announceConnection = (connected) => {
         configuration.connection = { connected, mode: configuration.mode }
         document.dispatchEvent(
@@ -33,6 +34,21 @@ if (configuration && import.meta.hot) {
     announceConnection(true)
     import.meta.hot.on('vite:ws:disconnect', () => announceConnection(false))
     import.meta.hot.on('vite:ws:connect', () => announceConnection(true))
+    if (typeof BroadcastChannel !== 'undefined') {
+        new BroadcastChannel('content-live-reload').addEventListener('message', (event) => {
+            const mode = event.data && event.data.mode
+            if (mode !== 'tagged' && mode !== 'always' && mode !== 'paused') {
+                window.location.reload()
+                return
+            }
+            if (mode !== 'paused' && missedWhilePaused) {
+                window.location.reload()
+                return
+            }
+            configuration.mode = mode
+            announceConnection(configuration.connection ? configuration.connection.connected : true)
+        })
+    }
     import.meta.hot.on('${EVENT_NAME}', (payload) => {
         const broadcastTags = Array.isArray(payload && payload.tags) ? payload.tags : []
         const ownTags = Array.isArray(configuration.tags) ? configuration.tags : []
@@ -45,6 +61,7 @@ if (configuration && import.meta.hot) {
                 detail: { tags: broadcastTags, matched: affected, mode: configuration.mode },
             }),
         )
+        if (affected && configuration.mode === 'paused') missedWhilePaused = true
         if (!affected || configuration.mode === 'paused') return
         const notice = new CustomEvent('${EVENT_NAME}', { cancelable: true, detail: { tags: broadcastTags } })
         if (!document.dispatchEvent(notice)) return

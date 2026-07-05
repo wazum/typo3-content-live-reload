@@ -55,6 +55,8 @@ describe('contentLiveReload', () => {
         expect(code).toContain('vite:ws:disconnect')
         expect(code).toContain('vite:ws:connect')
         expect(code).toContain('configuration.connection =')
+        expect(code).toContain("BroadcastChannel('content-live-reload')")
+        expect(code).toContain('missedWhilePaused')
     })
 
     it('broadcasts debounced deduplicated tags', async () => {

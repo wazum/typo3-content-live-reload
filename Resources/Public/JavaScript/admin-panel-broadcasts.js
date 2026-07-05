@@ -91,8 +91,12 @@
         renderStatus()
         const form = document.querySelector('form[data-typo3-role=typo3-adminPanel]')
         if (!form?.dataset.typo3AjaxUrl) return
+        const appliedMode = event.target.value === '' ? 'default' : event.target.value
         fetch(form.dataset.typo3AjaxUrl, { method: 'POST', body: new FormData(form) })
             .then(() => {
+                try {
+                    new BroadcastChannel('content-live-reload').postMessage({ mode: appliedMode })
+                } catch {}
                 const query = location.search
                     .substring(1)
                     .split('&')
