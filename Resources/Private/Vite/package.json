@@ -21,7 +21,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "vite": ">=5"
+    "vite": ">=5.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
