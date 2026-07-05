@@ -38,11 +38,21 @@ test('editing a record reloads only the affected tab', async ({ browser }) => {
     otherPage.on('load', () => {
         otherReloads += 1
     })
+    const otherBroadcast = otherPage.evaluate(
+        () =>
+            new Promise<{ matched: boolean }>((resolveBroadcast) => {
+                document.addEventListener(
+                    'typo3:content-changed:broadcast',
+                    (event) => resolveBroadcast({ matched: (event as CustomEvent).detail.matched }),
+                    { once: true },
+                )
+            }),
+    )
 
     updateContent(seed.homeContentUid, 'Home content updated')
 
     await expect(homePage.locator('body')).toContainText('Home content updated', { timeout: 15000 })
-    await homePage.waitForTimeout(3000)
+    expect(await otherBroadcast).toEqual({ matched: false })
     expect(otherReloads).toBe(0)
 
     await contextHome.close()
