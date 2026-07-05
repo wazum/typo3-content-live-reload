@@ -64,6 +64,19 @@ final class ClearCachePostProcHookTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function clearingASinglePageCacheBroadcastsThePageTag(): void
+    {
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start([], []);
+        $dataHandler->clear_cacheCmd('42');
+
+        $collector = GeneralUtility::makeInstance(BroadcastTagCollector::class);
+        $collector->flush();
+
+        self::assertSame([['pageId_42']], $this->broadcaster->received);
+    }
+
+    #[Test]
     public function eventListenersCanAddBroadcastTags(): void
     {
         $collectorBroadcaster = new RecordingBroadcaster();

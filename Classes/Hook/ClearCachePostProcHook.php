@@ -28,7 +28,7 @@ final class ClearCachePostProcHook
             return;
         }
 
-        $tags = array_keys(array_filter((array)($parameters['tags'] ?? [])));
+        $tags = $this->normalizeTags((array)($parameters['tags'] ?? []));
         if ($tags === []) {
             return;
         }
@@ -42,5 +42,25 @@ final class ClearCachePostProcHook
         ));
 
         $this->collector->add(...$event->getTags());
+    }
+
+    /**
+     * DataHandler passes a tag => true map on record saves,
+     * but a plain list of tags from clear_cacheCmd().
+     *
+     * @param array<int|string, mixed> $rawTags
+     *
+     * @return array<string>
+     */
+    private function normalizeTags(array $rawTags): array
+    {
+        if (array_is_list($rawTags)) {
+            return array_values(array_filter(
+                $rawTags,
+                static fn (mixed $tag): bool => is_string($tag) && $tag !== '',
+            ));
+        }
+
+        return array_filter(array_keys(array_filter($rawTags)), is_string(...));
     }
 }
