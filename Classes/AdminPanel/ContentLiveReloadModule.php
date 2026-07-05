@@ -28,7 +28,7 @@ final class ContentLiveReloadModule extends AbstractModule implements RequestEnr
 
     public function getLabel(): string
     {
-        return 'Content Live Reload';
+        return 'Live Reload';
     }
 
     public function getIconIdentifier(): string
@@ -40,7 +40,7 @@ final class ContentLiveReloadModule extends AbstractModule implements RequestEnr
     {
         $mode = $this->configurationService->getConfigurationOption('content_live_reload', 'mode');
 
-        return (in_array($mode, ['tagged', 'always', 'paused'], true) ? $mode : 'tagged') . ' · waiting for the dev server';
+        return in_array($mode, ['always', 'paused'], true) ? '… ' . $mode : '…';
     }
 
     /**
@@ -48,11 +48,7 @@ final class ContentLiveReloadModule extends AbstractModule implements RequestEnr
      */
     public function getJavaScriptFiles(): array
     {
-        $script = 'EXT:content_live_reload/Resources/Public/JavaScript/admin-panel-broadcasts.js';
-        $absolutePath = GeneralUtility::getFileAbsFileName($script);
-        $modificationTime = is_file($absolutePath) ? (string)filemtime($absolutePath) : '';
-
-        return [$script . ($modificationTime !== '' ? '?' . $modificationTime : '')];
+        return [$this->versionedResource('EXT:content_live_reload/Resources/Public/JavaScript/admin-panel-broadcasts.js')];
     }
 
     /**
@@ -60,7 +56,15 @@ final class ContentLiveReloadModule extends AbstractModule implements RequestEnr
      */
     public function getCssFiles(): array
     {
-        return [];
+        return [$this->versionedResource('EXT:content_live_reload/Resources/Public/Css/admin-panel.css')];
+    }
+
+    private function versionedResource(string $resource): string
+    {
+        $absolutePath = GeneralUtility::getFileAbsFileName($resource);
+        $modificationTime = is_file($absolutePath) ? (string)filemtime($absolutePath) : '';
+
+        return $resource . ($modificationTime !== '' ? '?' . $modificationTime : '');
     }
 
     public function enrich(ServerRequestInterface $request): ServerRequestInterface

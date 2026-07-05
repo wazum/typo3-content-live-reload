@@ -17,7 +17,7 @@
 
     const statusElement = () => {
         for (const label of document.querySelectorAll('.typo3-adminPanel-module-trigger-label')) {
-            if (label.textContent.trim() !== 'Content Live Reload') continue
+            if (label.textContent.trim() !== 'Live Reload') continue
             const information = label.parentElement?.querySelector('.typo3-adminPanel-module-trigger-information')
             if (information) return information
         }
@@ -29,11 +29,22 @@
     const renderStatus = () => {
         const element = statusElement()
         if (!element) return
-        const connection = state.connected === null ? '…' : state.connected ? '●' : '○ disconnected'
-        const parts = [connection]
-        if (state.mode) parts.push(state.mode)
-        parts.push(state.lastUpdate ? 'updated ' + state.lastUpdate : 'no updates yet')
-        element.textContent = parts.join(' · ')
+        const dot = document.createElement('span')
+        const dotState = state.connected === null ? 'connecting' : state.connected ? 'connected' : 'disconnected'
+        dot.className = 'content-live-reload-dot content-live-reload-dot--' + dotState
+        dot.title = dotState
+        const parts = []
+        if (state.mode && state.mode !== 'tagged') parts.push(state.mode)
+        if (state.lastUpdate) parts.push(state.lastUpdate)
+        element.replaceChildren(dot, document.createTextNode(parts.length ? ' ' + parts.join(' ') : ''))
+    }
+
+    const pingDot = () => {
+        const dot = statusElement()?.querySelector('.content-live-reload-dot--connected')
+        if (!dot) return
+        dot.classList.remove('content-live-reload-dot--ping')
+        void dot.offsetWidth
+        dot.classList.add('content-live-reload-dot--ping')
     }
 
     const readEntries = () => {
@@ -108,21 +119,22 @@
     })
 
     document.addEventListener('typo3:content-changed:broadcast', (event) => {
-        const time = new Date().toLocaleTimeString()
+        const now = new Date()
         const verdict =
             event.detail.mode === 'paused'
                 ? (event.detail.matched ? 'matched (paused)' : 'no overlap (paused)')
                 : (event.detail.matched ? 'matched → reload' : 'no overlap')
         if (event.detail.matched && event.detail.mode !== 'paused') {
-            state.lastUpdate = time
+            state.lastUpdate = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             try {
-                sessionStorage.setItem(updateStorageKey, time)
+                sessionStorage.setItem(updateStorageKey, state.lastUpdate)
             } catch {}
         }
-        const entries = [{ time, verdict, tags: event.detail.tags.join(', ') }, ...readEntries()]
+        const entries = [{ time: now.toLocaleTimeString(), verdict, tags: event.detail.tags.join(', ') }, ...readEntries()]
         writeEntries(entries)
         renderFeed(entries)
         renderStatus()
+        pingDot()
     })
 
     const initialize = () => {

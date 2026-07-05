@@ -168,9 +168,9 @@ Matching works as an intersection: a broadcast tag only reloads tabs whose **ren
 
 ## Admin Panel
 
-With [EXT:adminpanel](https://packagist.org/packages/typo3/cms-adminpanel) installed, a **Content Live Reload** module appears in the frontend Admin Panel.
+With [EXT:adminpanel](https://packagist.org/packages/typo3/cms-adminpanel) installed, a **Live Reload** module appears in the frontend Admin Panel.
 
-The panel bar itself shows the essentials at one glance, without opening the module: whether the dev-server connection is alive (`●` or `○ disconnected`), the active reload mode, and when this tab last updated — for example `● · tagged · updated 21:58:57`.
+The panel bar itself shows the essentials at one glance, without opening the module: a connection dot (green and gently pulsing while the dev server is connected, a red ring when it is not, with a short flash for every received broadcast), the reload mode — but only when it differs from the normal `tagged` — and the time of this tab's last update. The everyday healthy state is just the green dot and a time like `21:58`; anything unusual (`paused`, `always`, a lost connection) announces itself by appearing. Animations respect `prefers-reduced-motion`.
 
 The module itself has three tabs:
 
