@@ -87,9 +87,44 @@ This extension only handles **content** changes (records in the database). **Fil
 |---|---|---|
 | A record in the backend | Affected tabs reload | this extension |
 | CSS / TypeScript | Hot update, often without reload | Vite HMR (via vite-asset-collector) |
-| A Fluid template | Nothing, by default! | your own Vite setup |
+| A Fluid template | Nothing, by default! | your own Vite setup — see the [bonus below](#bonus-template-reloads-in-a-few-lines) |
 
 Note that TYPO3 caches compiled Fluid templates. In Development context the cache normally notices changed files by itself; if a change does not show up (this happens most often with partials), clear the TYPO3 caches.
+
+### Bonus: Template Reloads in a Few Lines
+
+You do not need an extra package for template reloads — a few lines in `vite.config.ts` are enough:
+
+```ts
+import { defineConfig, Plugin } from 'vite'
+
+function fluidReload(directories: string[]): Plugin {
+    return {
+        name: 'fluid-reload',
+        apply: 'serve',
+        configureServer(server) {
+            server.watcher.add(directories)
+            server.watcher.on('change', (file) => {
+                if (!file.endsWith('.html')) return
+                server.ws.send({ type: 'full-reload', path: '*' })
+            })
+        },
+    }
+}
+
+export default defineConfig({
+    plugins: [
+        fluidReload(['packages']),
+        // contentLiveReload(), ...
+    ],
+})
+```
+
+Three details make this work reliably:
+
+- `server.watcher.add(directories)` is needed because Vite only watches directories that contain modules — your template folders are not among them. Pass plain directory paths, not globs (Vite's watcher ignores globs since Vite 6).
+- `path: '*'` is needed for server-rendered pages: with a file path instead, the browser only reloads when the URL matches that file, which is never true for TYPO3 URLs.
+- The snippet reuses Vite's own watcher, so your `server.watch` options apply — for example `usePolling: true` in Docker setups where file events do not cross the mount.
 
 ## Requirements
 
