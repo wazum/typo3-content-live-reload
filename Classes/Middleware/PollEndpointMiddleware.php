@@ -1,0 +1,94 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Wazum\ContentLiveReload\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Http\Response;
+use Wazum\ContentLiveReload\Broadcast\BroadcastLogInterface;
+use Wazum\ContentLiveReload\Configuration\ExtensionSettings;
+
+final class PollEndpointMiddleware implements MiddlewareInterface
+{
+    public const PATH = '/__content-live-reload/poll';
+
+    private const MAXIMUM_BROADCASTS = 100;
+
+    public function __construct(
+        private readonly ExtensionSettings $settings,
+        private readonly BroadcastLogInterface $broadcastLog,
+        private readonly Context $context,
+    ) {
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        if ($request->getUri()->getPath() !== self::PATH || !$this->settings->contextAllowed()) {
+            return $handler->handle($request);
+        }
+
+        if (!$this->settings->developmentContext() && !$this->backendUserLoggedIn()) {
+            return new Response('php://temp', 404);
+        }
+
+        $since = $this->sinceParameter($request);
+        if ($since === null) {
+            return new Response('php://temp', 400);
+        }
+
+        return $this->jsonResponse($this->payload($since));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function payload(int $since): array
+    {
+        $latestSequence = $this->broadcastLog->latestSequence();
+        if ($since === 0) {
+            return ['sequence' => $latestSequence];
+        }
+        if ($since > $latestSequence) {
+            return ['sequence' => $latestSequence, 'stale' => true];
+        }
+        if ($since === $latestSequence) {
+            return ['sequence' => $latestSequence, 'broadcasts' => []];
+        }
+        if ($since + 1 < $this->broadcastLog->oldestSequence()
+            || $latestSequence - $since > self::MAXIMUM_BROADCASTS
+        ) {
+            return ['sequence' => $latestSequence, 'stale' => true];
+        }
+
+        return ['sequence' => $latestSequence, 'broadcasts' => $this->broadcastLog->since($since)];
+    }
+
+    private function sinceParameter(ServerRequestInterface $request): ?int
+    {
+        $value = $request->getQueryParams()['since'] ?? null;
+        if (!is_string($value) || !ctype_digit($value)) {
+            return null;
+        }
+
+        return (int)$value;
+    }
+
+    private function backendUserLoggedIn(): bool
+    {
+        return (bool)$this->context->getPropertyFromAspect('backend.user', 'isLoggedIn', false);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function jsonResponse(array $payload): ResponseInterface
+    {
+        return (new JsonResponse($payload))->withHeader('Cache-Control', 'no-store, private');
+    }
+}

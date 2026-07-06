@@ -11,15 +11,24 @@ services:
   Wazum\ContentLiveReload\Hook\ClearCachePostProcHook:
     public: true
 
+  Wazum\ContentLiveReload\Middleware\PollEndpointMiddleware:
+    public: true
+
   Wazum\ContentLiveReload\Middleware\TagInjectionMiddleware:
     public: true
+    arguments:
+      $systemResourceFactory: '@?TYPO3\CMS\Core\SystemResource\SystemResourceFactory'
+      $systemResourcePublisher: '@?TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface'
 
   Wazum\ContentLiveReload\Resolver\DevServerUrlResolver:
     arguments:
       $viteAssetCollectorService: '@?Praetorius\ViteAssetCollector\Service\ViteService'
 
+  Wazum\ContentLiveReload\Broadcast\BroadcastLogInterface:
+    alias: Wazum\ContentLiveReload\Broadcast\DatabaseBroadcastLog
+
   Wazum\ContentLiveReload\Broadcaster\TagBroadcasterInterface:
-    alias: Wazum\ContentLiveReload\Broadcaster\ViteDevServerBroadcaster
+    alias: Wazum\ContentLiveReload\Broadcaster\CompositeBroadcaster
 
   Wazum\ContentLiveReload\Runtime\ResponseDetacher:
     alias: Wazum\ContentLiveReload\Runtime\SapiResponseDetacher
