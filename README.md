@@ -1,3 +1,23 @@
+> [!WARNING]
+> **This package has moved: [wazum/typo3-live-reload](https://github.com/wazum/typo3-live-reload)** ([Packagist](https://packagist.org/packages/wazum/typo3-live-reload)).
+>
+> Version 2.0.0 does everything this package did — and additionally reloads on **file changes**: editing a Fluid
+> template, partial, layout, ViewHelper class, or component reloads exactly the tabs whose pages rendered that file.
+> This repository is archived; installed 1.x versions keep working, but there will be no further releases here.
+>
+> **Migration** — `composer remove wazum/typo3-content-live-reload && composer require --dev wazum/typo3-live-reload`, then:
+>
+> | 1.x (this package) | 2.x (wazum/typo3-live-reload) |
+> |---|---|
+> | extension key `content_live_reload` | `live_reload` (settings move to `EXTENSIONS/live_reload`) |
+> | namespace `Wazum\ContentLiveReload` | `Wazum\LiveReload` |
+> | table `tx_contentlivereload_broadcast` | `tx_livereload_broadcast` (recreate via Database Analyzer) |
+> | vite plugin import `.../typo3-content-live-reload/...` | `.../typo3-live-reload/...` (export `liveReload`) |
+> | virtual module `virtual:content-live-reload` | `virtual:live-reload` |
+> | endpoint `/__typo3-content-changed` | `/__typo3-live-reload` |
+> | events `typo3:content-changed[:*]` | `typo3:live-reload[:*]` |
+> | `window.__contentLiveReload` | `window.__liveReload` |
+
 <h1 align="center">Content Live Reload</h1>
 <p align="center"><em>Save a record in the backend. The right browser tabs reload. Nothing else moves.</em></p>
 <br>
