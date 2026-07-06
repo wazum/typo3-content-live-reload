@@ -75,4 +75,4 @@ jobs:
       - run: npm test
         working-directory: Tests/E2E
       - if: failure()
-        run: tail -50 Tests/E2E/.php-server.log Tests/E2E/.vite.log || true
+        run: tail -50 Tests/E2E/.php-server.log Tests/E2E/.php-server-staging.log Tests/E2E/.vite.log || true

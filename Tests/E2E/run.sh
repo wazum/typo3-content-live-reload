@@ -6,7 +6,7 @@ E2E_DIR="${EXTENSION_ROOT}/Tests/E2E"
 APP_DIR="${E2E_DIR}/.app"
 CORE_CONSTRAINT="${TYPO3_CORE_CONSTRAINT:-^13.4}"
 
-for pidFile in "${E2E_DIR}/.php-server.pid" "${E2E_DIR}/.vite.pid"; do
+for pidFile in "${E2E_DIR}/.php-server.pid" "${E2E_DIR}/.php-server-staging.pid" "${E2E_DIR}/.vite.pid"; do
     if [ -f "${pidFile}" ]; then
         pkill -P "$(cat "${pidFile}")" 2>/dev/null || true
         kill "$(cat "${pidFile}")" 2>/dev/null || true
@@ -47,10 +47,13 @@ cp "${E2E_DIR}/fixture/sites-main-config.yaml" config/sites/main/config.yaml
 vendor/bin/typo3 cache:flush
 vendor/bin/typo3 e2e:seed > "${E2E_DIR}/.seed.json"
 vendor/bin/typo3 cache:flush
+php -r '$database = glob("var/sqlite/cms-*.sqlite")[0]; (new PDO("sqlite:" . $database))->exec("PRAGMA journal_mode=WAL"); copy($database, dirname($database) . "/staging.sqlite"); (new PDO("sqlite:" . dirname($database) . "/staging.sqlite"))->exec("PRAGMA journal_mode=WAL");'
 
 unset VITE_SERVER_URI VITE_PRIMARY_PORT
 TYPO3_CONTEXT=Development VITE_PRIMARY_PORT=5273 php -S 127.0.0.1:8080 -t public router.php >"${E2E_DIR}/.php-server.log" 2>&1 &
 echo $! > "${E2E_DIR}/.php-server.pid"
+TYPO3_CONTEXT='Production/Staging' php -S 127.0.0.1:8081 -t public router.php >"${E2E_DIR}/.php-server-staging.log" 2>&1 &
+echo $! > "${E2E_DIR}/.php-server-staging.pid"
 npx vite --config vite.config.ts >"${E2E_DIR}/.vite.log" 2>&1 &
 echo $! > "${E2E_DIR}/.vite.pid"
 
@@ -59,6 +62,11 @@ for _ in $(seq 1 30); do
     sleep 1
 done
 curl -fs http://127.0.0.1:8080/ >/dev/null
+for _ in $(seq 1 30); do
+    curl -fs http://127.0.0.1:8081/ >/dev/null && break
+    sleep 1
+done
+curl -fs http://127.0.0.1:8081/ >/dev/null
 for _ in $(seq 1 15); do
     curl -fs http://127.0.0.1:5273/@id/virtual:content-live-reload >/dev/null && break
     sleep 1
