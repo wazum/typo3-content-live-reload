@@ -1,4 +1,4 @@
-<h1 align="center">Content Live Reload (Development)</h1>
+<h1 align="center">Content Live Reload</h1>
 <p align="center"><em>Save a record in the backend. The right browser tabs reload. Nothing else moves.</em></p>
 <br>
 
@@ -151,6 +151,8 @@ Extension Configuration (`content_live_reload`) or `$GLOBALS['TYPO3_CONF_VARS'][
 | `reloadMode` | `tagged` | `tagged` = only affected tabs reload; `always` = every connected tab |
 | `viteServerInternalUrl` | `http://localhost:5173` | Dev server URL reachable from PHP (broadcast target) |
 | `viteServerPublicUrl` | *(empty)* | Dev server URL reachable from the browser; empty = resolve automatically |
+| `pollInterval` | `3000` | Milliseconds between polls when the [editor reload](#reload-for-editors-without-a-dev-server) transport is active; minimum `1000` |
+| `retention` | `300` | Seconds a broadcast stays answerable for polling tabs; minimum `60` |
 
 The browser-facing URL is resolved in this order: the explicit setting → vite-asset-collector's `auto` chain (which understands, for example, `ddev-vite-sidecar`'s `VITE_SERVER_URI`) → none. With none, the extension stays inactive for that request.
 
@@ -163,6 +165,31 @@ ddev exec 'curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5173/
 `204` means PHP can reach the dev server. The Admin Panel's Status tab (see below) shows both URLs at one glance.
 
 The Vite plugin accepts a `debounceMs` option (default `200`) — how long broadcasts are collected before they go to the browser. An `endpoint` option also exists, but the PHP side always posts to `/__typo3-content-changed`; changing the endpoint only makes sense when a proxy rewrites that path.
+
+## Reload for Editors (Without a Dev Server)
+
+The same reload also works where no Vite dev server runs — typically a Staging environment. An editor saves a record in the backend, and every preview tab of a logged-in backend user that shows this record reloads. Only the transport changes: instead of the dev server's WebSocket, each tab asks a small endpoint every few seconds whether something changed. Tag matching, reload modes, the `typo3:content-changed` events, and the Admin Panel module all work exactly as described above — the Status tab shows which transport is active.
+
+For this, install the package as a regular dependency instead of `--dev`, so it ships with your release:
+
+```bash
+composer require wazum/typo3-content-live-reload
+```
+
+Then name the **exact** application context of the environment in `activeContexts`:
+
+```
+activeContexts = Development,Production/Staging
+```
+
+An entry matches itself and its subcontexts, and a bare `Production` entry is silently ignored — so a staging configuration that ends up on a real production system (context `Production`) activates nothing. The Development context keeps its Vite transport; every other allowed context polls automatically. There is no transport setting.
+
+Outside the Development context, a valid backend user session is required — this is not configurable:
+
+- Without a backend session, nothing is injected: no configuration, no tag data, no script. Anonymous visitors get the exact page they would get without the extension.
+- The poll endpoint (`/__content-live-reload/poll`) answers a bare 404 without a backend session, and in contexts that are not allowed at all it is not even claimed — the path behaves like any other unknown URL on your site.
+
+`pollInterval` controls how often each tab asks for changes (so a reload arrives within that many milliseconds after a save), and `retention` controls how long a broadcast stays answerable — a tab that was hidden longer than that simply reloads once to catch up. The defaults are fine for editing workflows.
 
 ## Turbo Instead of Reload
 
