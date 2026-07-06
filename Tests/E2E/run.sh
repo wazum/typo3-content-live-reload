@@ -47,7 +47,7 @@ cp "${E2E_DIR}/fixture/sites-main-config.yaml" config/sites/main/config.yaml
 vendor/bin/typo3 cache:flush
 vendor/bin/typo3 e2e:seed > "${E2E_DIR}/.seed.json"
 vendor/bin/typo3 cache:flush
-php -r '$database = glob("var/sqlite/cms-*.sqlite")[0]; (new PDO("sqlite:" . $database))->exec("PRAGMA journal_mode=WAL"); copy($database, dirname($database) . "/staging.sqlite"); (new PDO("sqlite:" . dirname($database) . "/staging.sqlite"))->exec("PRAGMA journal_mode=WAL");'
+php -r '$database = glob("var/sqlite/cms-*.sqlite")[0]; (new PDO("sqlite:" . $database))->exec("PRAGMA journal_mode=WAL");'
 
 unset VITE_SERVER_URI VITE_PRIMARY_PORT
 TYPO3_CONTEXT=Development VITE_PRIMARY_PORT=5273 php -S 127.0.0.1:8080 -t public router.php >"${E2E_DIR}/.php-server.log" 2>&1 &
