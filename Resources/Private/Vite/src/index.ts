@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Plugin, ViteDevServer } from 'vite'
 
 export const VIRTUAL_MODULE_ID = 'virtual:content-live-reload'
@@ -5,76 +8,7 @@ const EVENT_NAME = 'typo3:content-changed'
 const DEFAULT_ENDPOINT = '/__typo3-content-changed'
 const DEFAULT_DEBOUNCE_MS = 200
 
-const clientCode = `const configuration = window.__contentLiveReload
-const scrollStorageKey = 'content-live-reload:scroll'
-try {
-    const storedScroll = sessionStorage.getItem(scrollStorageKey)
-    if (storedScroll) {
-        sessionStorage.removeItem(scrollStorageKey)
-        const position = JSON.parse(storedScroll)
-        if (position.href === window.location.href) {
-            const restore = () => {
-                if (history.scrollRestoration === 'manual') window.scrollTo(position.x, position.y)
-            }
-            if (document.readyState === 'complete') restore()
-            else window.addEventListener('load', restore, { once: true })
-        }
-    }
-} catch {}
-if (configuration && import.meta.hot) {
-    let missedWhilePaused = false
-    const announceConnection = (connected) => {
-        configuration.connection = { connected, mode: configuration.mode }
-        document.dispatchEvent(
-            new CustomEvent('${EVENT_NAME}:connection', {
-                detail: { connected, mode: configuration.mode },
-            }),
-        )
-    }
-    announceConnection(true)
-    import.meta.hot.on('vite:ws:disconnect', () => announceConnection(false))
-    import.meta.hot.on('vite:ws:connect', () => announceConnection(true))
-    if (typeof BroadcastChannel !== 'undefined') {
-        new BroadcastChannel('content-live-reload').addEventListener('message', (event) => {
-            const mode = event.data && event.data.mode
-            if (mode !== 'tagged' && mode !== 'always' && mode !== 'paused') {
-                window.location.reload()
-                return
-            }
-            if (mode !== 'paused' && missedWhilePaused) {
-                window.location.reload()
-                return
-            }
-            configuration.mode = mode
-            announceConnection(configuration.connection ? configuration.connection.connected : true)
-        })
-    }
-    import.meta.hot.on('${EVENT_NAME}', (payload) => {
-        const broadcastTags = Array.isArray(payload && payload.tags) ? payload.tags : []
-        const ownTags = Array.isArray(configuration.tags) ? configuration.tags : []
-        const affected =
-            configuration.mode === 'always' ||
-            ownTags.length === 0 ||
-            broadcastTags.some((tag) => ownTags.includes(tag))
-        document.dispatchEvent(
-            new CustomEvent('${EVENT_NAME}:broadcast', {
-                detail: { tags: broadcastTags, matched: affected, mode: configuration.mode },
-            }),
-        )
-        if (affected && configuration.mode === 'paused') missedWhilePaused = true
-        if (!affected || configuration.mode === 'paused') return
-        const notice = new CustomEvent('${EVENT_NAME}', { cancelable: true, detail: { tags: broadcastTags } })
-        if (!document.dispatchEvent(notice)) return
-        try {
-            sessionStorage.setItem(
-                scrollStorageKey,
-                JSON.stringify({ x: window.scrollX, y: window.scrollY, href: window.location.href }),
-            )
-        } catch {}
-        window.location.reload()
-    })
-}
-`
+const clientFilePath = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'vite-client.js')
 
 export interface ContentLiveReloadOptions {
     endpoint?: string
@@ -103,7 +37,7 @@ export function contentLiveReload(options: ContentLiveReloadOptions = {}): Plugi
             return id === VIRTUAL_MODULE_ID ? VIRTUAL_MODULE_ID : undefined
         },
         load(id) {
-            return id === VIRTUAL_MODULE_ID ? clientCode : undefined
+            return id === VIRTUAL_MODULE_ID ? readFileSync(clientFilePath, 'utf-8') : undefined
         },
         configureServer(server) {
             server.middlewares.use((request, response, next) => {

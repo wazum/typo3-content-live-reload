@@ -17,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json && esbuild src/vite-client.ts --bundle --format=esm --outfile=dist/vite-client.js && esbuild src/poll-client.ts --bundle --format=iife --minify --outfile=../../Public/JavaScript/poll-client.js",
     "test": "vitest run"
   },
   "peerDependencies": {
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
+    "esbuild": "^0.28.1",
     "happy-dom": "^18.0.1",
     "typescript": "^5.4",
     "vite": "^7.0",
