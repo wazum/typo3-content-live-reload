@@ -81,7 +81,7 @@ final class TagInjectionMiddleware implements MiddlewareInterface, LoggerAwareIn
     private function snippet(ServerRequestInterface $request, string $html): ?string
     {
         if ($this->settings->developmentContext()) {
-            return $this->viteSnippet($request, $html);
+            return $this->viteSnippet($request, $html) ?? $this->pollSnippet($request, $html);
         }
         if (!$this->backendUserLoggedIn()) {
             return null;

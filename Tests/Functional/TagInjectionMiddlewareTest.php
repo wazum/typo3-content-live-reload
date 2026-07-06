@@ -12,8 +12,10 @@ use ReflectionClass;
 use Throwable;
 use TYPO3\CMS\Core\Cache\CacheDataCollector;
 use TYPO3\CMS\Core\Cache\CacheTag;
+use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Security\ContentSecurityPolicy\ConsumableNonce;
 use TYPO3\CMS\Frontend\Page\PageInformation;
@@ -167,15 +169,17 @@ final class TagInjectionMiddlewareTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function skipsWhenNoDevServerUrlIsResolvable(): void
+    public function fallsBackToPollTransportWhenNoDevServerUrlIsResolvable(): void
     {
-        $extensionConfigurationPath = 'EXTENSIONS/content_live_reload/viteServerPublicUrl';
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['content_live_reload']['viteServerPublicUrl'] = '';
 
         $response = $this->process($this->request(), $this->htmlHandler('<html><head></head><body></body></html>'));
 
-        self::assertStringNotContainsString('__contentLiveReload', (string)$response->getBody());
-        unset($extensionConfigurationPath);
+        $html = (string)$response->getBody();
+        self::assertStringContainsString('"transport":"poll"', $html);
+        self::assertStringContainsString('"endpoint":"\/__content-live-reload\/poll"', $html);
+        self::assertMatchesRegularExpression('#<script defer src="[^"]*poll-client\.js[^"]*"></script>#', $html);
+        self::assertStringNotContainsString('virtual:content-live-reload', $html);
     }
 
     private function policyBagFor(ConsumableNonce $nonce): \TYPO3\CMS\Core\Security\ContentSecurityPolicy\Middleware\PolicyBag
@@ -221,8 +225,11 @@ final class TagInjectionMiddlewareTest extends FunctionalTestCase
     {
         $collector = new CacheDataCollector();
         $collector->addCacheTags(new CacheTag('tt_content_5'), new CacheTag('pageId_42'));
+        $request = new ServerRequest('https://example.org/', 'GET');
 
-        return (new ServerRequest('https://example.org/', 'GET'))
+        return $request
+            ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_FE)
+            ->withAttribute('normalizedParams', NormalizedParams::createFromRequest($request))
             ->withAttribute('frontend.cache.collector', $collector);
     }
 
