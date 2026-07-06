@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use Wazum\ContentLiveReload\Configuration\ExtensionSettings;
+use Wazum\ContentLiveReload\Middleware\PollEndpointMiddleware;
 use Wazum\ContentLiveReload\Resolver\DevServerUrlResolver;
 
 final class StatusInformation extends AbstractSubModule implements DataProviderInterface
@@ -47,6 +48,9 @@ final class StatusInformation extends AbstractSubModule implements DataProviderI
             'activeContexts' => implode(', ', $this->settings->activeContexts()),
             'mode' => is_string($modeOverride) ? $modeOverride : $this->settings->reloadMode(),
             'modeOverridden' => is_string($modeOverride),
+            'transport' => $this->settings->developmentContext() ? 'vite' : 'poll',
+            'pollEndpoint' => PollEndpointMiddleware::PATH,
+            'pollInterval' => $this->settings->pollInterval(),
             'resolvedUrl' => $resolution['url'],
             'resolutionSource' => $resolution['source'],
             'internalUrl' => $this->settings->viteServerInternalUrl(),

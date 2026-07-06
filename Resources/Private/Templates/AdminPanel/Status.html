@@ -11,6 +11,10 @@
                 <td>{mode}{f:if(condition: modeOverridden, then: ' (overridden via admin panel)')}</td>
             </tr>
             <tr>
+                <th scope="row" class="typo3-adminPanel-table-cell-key">Transport</th>
+                <td><f:if condition="{transport} == 'poll'"><f:then>poll — {pollEndpoint}, every {pollInterval} ms</f:then><f:else>{transport}</f:else></f:if></td>
+            </tr>
+            <tr>
                 <th scope="row" class="typo3-adminPanel-table-cell-key">Browser-facing dev server</th>
                 <td>{f:if(condition: resolvedUrl, then: '{resolvedUrl}', else: 'not resolved')} — source: {resolutionSource}</td>
             </tr>
