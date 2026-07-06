@@ -54,6 +54,26 @@ final class ExtensionSettings
         return array_values(array_filter(array_map('trim', explode(',', $raw))));
     }
 
+    public function developmentContext(): bool
+    {
+        return $this->developmentContextFor((string)Environment::getContext());
+    }
+
+    public function developmentContextFor(string $context): bool
+    {
+        return $context === 'Development' || str_starts_with($context, 'Development/');
+    }
+
+    public function pollInterval(): int
+    {
+        return max(1000, $this->integerValue('pollInterval', 3000));
+    }
+
+    public function retention(): int
+    {
+        return max(60, $this->integerValue('retention', 300));
+    }
+
     public function reloadMode(): string
     {
         return match ($this->stringValue('reloadMode', 'tagged')) {
@@ -70,6 +90,19 @@ final class ExtensionSettings
     public function viteServerPublicUrl(): string
     {
         return rtrim($this->stringValue('viteServerPublicUrl', ''), '/');
+    }
+
+    private function integerValue(string $key, int $default): int
+    {
+        $value = $this->configuration()[$key] ?? null;
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) && ctype_digit(trim($value))) {
+            return (int)trim($value);
+        }
+
+        return $default;
     }
 
     private function stringValue(string $key, string $default): string

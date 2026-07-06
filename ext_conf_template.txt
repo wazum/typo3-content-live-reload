@@ -4,6 +4,12 @@ activeContexts = Development
 # cat=reload; type=options[tagged,always]; label=Reload mode: tagged = only tabs whose cache tags intersect the broadcast, always = every connected tab
 reloadMode = tagged
 
+# cat=reload; type=int+; label=Poll interval in milliseconds for the editor reload transport; minimum 1000
+pollInterval = 3000
+
+# cat=reload; type=int+; label=Seconds a broadcast stays available to polling clients; minimum 60
+retention = 300
+
 # cat=reload; type=string; label=Vite dev server URL reachable from PHP (broadcast target)
 viteServerInternalUrl = http://localhost:5173
 

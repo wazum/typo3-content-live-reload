@@ -70,6 +70,54 @@ final class ExtensionSettingsTest extends TestCase
     }
 
     #[Test]
+    public function recognizesDevelopmentContextAndItsSubcontexts(): void
+    {
+        $settings = $this->settingsWith([]);
+
+        self::assertTrue($settings->developmentContextFor('Development'));
+        self::assertTrue($settings->developmentContextFor('Development/Docker'));
+        self::assertFalse($settings->developmentContextFor('Development2'));
+        self::assertFalse($settings->developmentContextFor('Testing'));
+        self::assertFalse($settings->developmentContextFor('Production/Staging'));
+    }
+
+    #[Test]
+    public function returnsDefaultPollIntervalAndRetention(): void
+    {
+        $settings = $this->settingsWith([]);
+
+        self::assertSame(3000, $settings->pollInterval());
+        self::assertSame(300, $settings->retention());
+    }
+
+    #[Test]
+    public function parsesConfiguredPollIntervalAndRetention(): void
+    {
+        $settings = $this->settingsWith(['pollInterval' => '5000', 'retention' => '600']);
+
+        self::assertSame(5000, $settings->pollInterval());
+        self::assertSame(600, $settings->retention());
+    }
+
+    #[Test]
+    public function enforcesMinimumPollIntervalAndRetention(): void
+    {
+        $settings = $this->settingsWith(['pollInterval' => '100', 'retention' => '5']);
+
+        self::assertSame(1000, $settings->pollInterval());
+        self::assertSame(60, $settings->retention());
+    }
+
+    #[Test]
+    public function fallsBackToDefaultsOnNonNumericPollIntervalAndRetention(): void
+    {
+        $settings = $this->settingsWith(['pollInterval' => 'fast', 'retention' => '-10']);
+
+        self::assertSame(3000, $settings->pollInterval());
+        self::assertSame(300, $settings->retention());
+    }
+
+    #[Test]
     public function fallsBackToTaggedModeOnUnknownValue(): void
     {
         $settings = $this->settingsWith(['reloadMode' => 'sometimes']);
