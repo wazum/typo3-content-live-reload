@@ -147,7 +147,7 @@ Extension Configuration (`content_live_reload`) or `$GLOBALS['TYPO3_CONF_VARS'][
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `activeContexts` | `Development` | Application contexts (comma list, prefix match) where the extension is active |
+| `activeContexts` | `Development` | Application contexts (comma list) where the extension is active; an entry matches itself and its subcontexts (`Development` also covers `Development/Docker`); a bare `Production` entry is ignored — name the exact subcontext instead |
 | `reloadMode` | `tagged` | `tagged` = only affected tabs reload; `always` = every connected tab |
 | `viteServerInternalUrl` | `http://localhost:5173` | Dev server URL reachable from PHP (broadcast target) |
 | `viteServerPublicUrl` | *(empty)* | Dev server URL reachable from the browser; empty = resolve automatically |

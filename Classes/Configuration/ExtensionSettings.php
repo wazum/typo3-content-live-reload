@@ -22,9 +22,21 @@ final class ExtensionSettings
 
     public function contextAllowed(): bool
     {
-        $context = (string)Environment::getContext();
+        return $this->contextAllowedFor((string)Environment::getContext());
+    }
+
+    /**
+     * Matches whole context segments: "Production/Staging" allows itself and
+     * deeper subcontexts, never its parent. A bare "Production" entry is
+     * ignored — production-like environments must name their exact subcontext.
+     */
+    public function contextAllowedFor(string $context): bool
+    {
         foreach ($this->activeContexts() as $allowed) {
-            if (str_starts_with($context, $allowed)) {
+            if ($allowed === 'Production') {
+                continue;
+            }
+            if ($context === $allowed || str_starts_with($context, $allowed . '/')) {
                 return true;
             }
         }

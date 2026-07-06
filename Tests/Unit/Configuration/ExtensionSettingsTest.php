@@ -40,6 +40,36 @@ final class ExtensionSettingsTest extends TestCase
     }
 
     #[Test]
+    public function allowsExactContextAndSubcontexts(): void
+    {
+        $settings = $this->settingsWith(['activeContexts' => 'Development']);
+
+        self::assertTrue($settings->contextAllowedFor('Development'));
+        self::assertTrue($settings->contextAllowedFor('Development/Docker'));
+        self::assertFalse($settings->contextAllowedFor('Development2'));
+        self::assertFalse($settings->contextAllowedFor('Testing'));
+    }
+
+    #[Test]
+    public function allowsProductionSubcontextWithoutItsParent(): void
+    {
+        $settings = $this->settingsWith(['activeContexts' => 'Production/Staging']);
+
+        self::assertTrue($settings->contextAllowedFor('Production/Staging'));
+        self::assertTrue($settings->contextAllowedFor('Production/Staging/Cluster1'));
+        self::assertFalse($settings->contextAllowedFor('Production'));
+    }
+
+    #[Test]
+    public function ignoresABareProductionEntry(): void
+    {
+        $settings = $this->settingsWith(['activeContexts' => 'Production']);
+
+        self::assertFalse($settings->contextAllowedFor('Production'));
+        self::assertFalse($settings->contextAllowedFor('Production/Staging'));
+    }
+
+    #[Test]
     public function fallsBackToTaggedModeOnUnknownValue(): void
     {
         $settings = $this->settingsWith(['reloadMode' => 'sometimes']);
