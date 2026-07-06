@@ -51,9 +51,6 @@ final class PollEndpointMiddleware implements MiddlewareInterface
     private function payload(int $since): array
     {
         $latestSequence = $this->broadcastLog->latestSequence();
-        if ($since === 0) {
-            return ['sequence' => $latestSequence];
-        }
         if ($since > $latestSequence) {
             return ['sequence' => $latestSequence, 'stale' => true];
         }

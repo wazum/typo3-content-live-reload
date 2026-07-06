@@ -88,7 +88,7 @@ final class PollEndpointMiddlewareTest extends FunctionalTestCase
         $response = $this->poll('/__content-live-reload/poll', ['since' => '0']);
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame(['sequence' => 0], $this->payload($response));
+        self::assertSame(['sequence' => 0, 'broadcasts' => []], $this->payload($response));
     }
 
     #[Test]
@@ -103,15 +103,20 @@ final class PollEndpointMiddlewareTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function firstPollReturnsOnlyTheCurrentSequenceWithoutBacklog(): void
+    public function deliversTheFirstBroadcastWhenTheLogStartedEmpty(): void
     {
         $this->logInBackendUser();
+
+        $emptyResponse = $this->poll('/__content-live-reload/poll', ['since' => '0']);
+        self::assertSame(['sequence' => 0, 'broadcasts' => []], $this->payload($emptyResponse));
+
         $this->log()->append(['pageId_42']);
-        $this->log()->append(['pageId_7']);
 
         $response = $this->poll('/__content-live-reload/poll', ['since' => '0']);
-
-        self::assertSame(['sequence' => 2], $this->payload($response));
+        self::assertSame(
+            ['sequence' => 1, 'broadcasts' => [['sequence' => 1, 'tags' => ['pageId_42']]]],
+            $this->payload($response),
+        );
     }
 
     #[Test]
